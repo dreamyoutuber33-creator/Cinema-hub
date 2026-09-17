@@ -25,15 +25,17 @@ jobs:
           java-version: "17"
           cache: gradle
 
-      - name: Setup Gradle
+      - name: Setup Gradle 9.3.1
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: "8.9"
+          gradle-version: "9.3.1"
 
-      - name: Check project structure
+      - name: Check Android project
         shell: bash
         run: |
-          echo "Checking Android project..."
+          set -e
+
+          echo "Checking Android project structure..."
 
           if [ ! -f "settings.gradle" ] && [ ! -f "settings.gradle.kts" ]; then
             echo "ERROR: settings.gradle or settings.gradle.kts not found."
@@ -45,7 +47,10 @@ jobs:
             exit 1
           fi
 
-          echo "Project structure OK."
+          echo "Android project structure OK."
+
+      - name: Show Java version
+        run: java -version
 
       - name: Show Gradle version
         run: gradle --version
@@ -53,10 +58,12 @@ jobs:
       - name: Build Debug APK
         run: gradle :app:assembleDebug --stacktrace
 
-      - name: Find APK
+      - name: Verify APK
         shell: bash
         run: |
-          echo "Searching for APK..."
+          set -e
+
+          echo "Searching for generated APK..."
 
           find app/build/outputs/apk -type f -name "*.apk" -print
 
@@ -67,16 +74,16 @@ jobs:
             exit 1
           fi
 
-          echo "APK generated successfully."
+          echo "APK successfully generated."
 
-      - name: Upload Debug APK
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: CinemaHub-debug-apk
           path: app/build/outputs/apk/**/*.apk
           if-no-files-found: error
 
-      - name: Create GitHub Release
+      - name: Publish GitHub Release
         if: success()
         uses: softprops/action-gh-release@v2
         with:
